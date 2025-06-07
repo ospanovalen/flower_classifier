@@ -1,0 +1,74 @@
+[
+  {
+    "image_path": "test_images/6105809987_8f3d7a8d67_n.jpg",
+    "predicted_class": "roses",
+    "confidence": 0.9884125590324402,
+    "all_probabilities": {
+      "daisy": 0.000604462344199419,
+      "tulips": 5.243674968369305e-5,
+      "sunflowers": 0.0001199625403387472,
+      "dandelion": 0.010810625739395618,
+      "roses": 0.9884125590324402
+    }
+  },
+  {
+    "image_path": "test_images/20182559506_40a112f762.jpg",
+    "predicted_class": "daisy",
+    "confidence": 0.8404340744018555,
+    "all_probabilities": {
+      "daisy": 0.8404340744018555,
+      "tulips": 0.00041192781645804644,
+      "sunflowers": 0.0002592476666904986,
+      "dandelion": 0.15888935327529907,
+      "roses": 5.304148089635419e-6
+    }
+  },
+  {
+    "image_path": "test_images/3695826945_9f374e8a00_m.jpg",
+    "predicted_class": "daisy",
+    "confidence": 1.0,
+    "all_probabilities": {
+      "daisy": 1.0,
+      "tulips": 1.1156101820120057e-8,
+      "sunflowers": 6.886932357730302e-9,
+      "dandelion": 4.480337878476348e-8,
+      "roses": 1.642092684051022e-8
+    }
+  },
+  {
+    "image_path": "test_images/3625257860_33efeef614_m.jpg",
+    "predicted_class": "daisy",
+    "confidence": 1.0,
+    "all_probabilities": {
+      "daisy": 1.0,
+      "tulips": 6.715683781646775e-15,
+      "sunflowers": 1.5788283855236332e-17,
+      "dandelion": 5.467940722870147e-15,
+      "roses": 3.060830052566463e-16
+    }
+  },
+  {
+    "image_path": "test_images/daisy_test.jpg",
+    "predicted_class": "daisy",
+    "confidence": 0.8404340744018555,
+    "all_probabilities": {
+      "daisy": 0.8404340744018555,
+      "tulips": 0.00041192781645804644,
+      "sunflowers": 0.0002592476666904986,
+      "dandelion": 0.15888935327529907,
+      "roses": 5.304148089635419e-6
+    }
+  },
+  {
+    "image_path": "test_images/100080576_f52e8ee070_n.jpg",
+    "predicted_class": "daisy",
+    "confidence": 0.9999871253967285,
+    "all_probabilities": {
+      "daisy": 0.9999871253967285,
+      "tulips": 2.202175108934057e-9,
+      "sunflowers": 3.749730836943854e-8,
+      "dandelion": 1.2492014320741873e-5,
+      "roses": 3.8833113080727344e-7
+    }
+  }
+]

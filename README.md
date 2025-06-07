@@ -146,7 +146,7 @@ poetry run python -m flower_classifier.training.train --config-name=train
 
 **Автоматические действия при обучении:**
 
-- Проверка и загрузка данных через DVC (если нужно)
+- Проверка и загрузка данных через Google Drive (если нужно)
 - Создание необходимых директорий (`models/`, `plots/`)
 - Настройка MLflow эксперимента
 - Сохранение лучшей модели и логирование метрик
@@ -196,6 +196,25 @@ poetry run mlflow ui --host 127.0.0.1 --port 8080
 - Конфигурация Hydra
 - Git commit hash
 - Графики обучения в `plots/`
+
+### Troubleshooting
+
+**Проблема с PyOpenSSL при обучении:**
+Если получаете ошибку `AttributeError: module 'lib' has no attribute 'X509_V_FLAG_NOTIFY_POLICY'`, выполните:
+
+```bash
+poetry add pyopenssl --group dev
+```
+
+**Проблема с CUDA памятью:**
+Уменьшите batch_size в конфигурации:
+
+```bash
+poetry run python -m flower_classifier.training.train data.batch_size=8
+```
+
+**Долгая загрузка данных:**
+При первом запуске данные загружаются с Google Drive (~230MB). Это займет 1-2 минуты.
 
 ## Production Preparation
 
