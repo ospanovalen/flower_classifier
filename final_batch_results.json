@@ -1,0 +1,50 @@
+[
+  {
+    "image_path": "test_batch/20182559506_40a112f762.jpg",
+    "predicted_class": "sunflowers",
+    "confidence": 0.999935507774353,
+    "all_probabilities": {
+      "daisy": 6.425282481359318e-5,
+      "tulips": 1.675797847155991e-7,
+      "sunflowers": 0.999935507774353,
+      "dandelion": 8.31219395536209e-8,
+      "roses": 1.3940815515867122e-11
+    }
+  },
+  {
+    "image_path": "test_batch/3695826945_9f374e8a00_m.jpg",
+    "predicted_class": "tulips",
+    "confidence": 0.9599648714065552,
+    "all_probabilities": {
+      "daisy": 0.037444040179252625,
+      "tulips": 0.9599648714065552,
+      "sunflowers": 0.001860065502114594,
+      "dandelion": 0.0007125404081307352,
+      "roses": 1.843529571488034e-5
+    }
+  },
+  {
+    "image_path": "test_batch/3625257860_33efeef614_m.jpg",
+    "predicted_class": "tulips",
+    "confidence": 0.9999985694885254,
+    "all_probabilities": {
+      "daisy": 3.7078109471622156e-9,
+      "tulips": 0.9999985694885254,
+      "sunflowers": 1.0808116712723859e-6,
+      "dandelion": 4.104423396711354e-7,
+      "roses": 8.303486787042402e-10
+    }
+  },
+  {
+    "image_path": "test_batch/7358085448_b317d11cd5.jpg",
+    "predicted_class": "tulips",
+    "confidence": 0.9592564105987549,
+    "all_probabilities": {
+      "daisy": 0.03976529464125633,
+      "tulips": 0.9592564105987549,
+      "sunflowers": 0.000645554275251925,
+      "dandelion": 0.00032739844755269587,
+      "roses": 5.378402875066968e-6
+    }
+  }
+]
