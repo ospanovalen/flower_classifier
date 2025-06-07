@@ -25,6 +25,8 @@ class ONNXConverter:
         """Load model from checkpoint."""
         model = FlowerClassifier.load_from_checkpoint(self.checkpoint_path)
         model.eval()
+        # Move model to CPU for ONNX export to avoid device mismatch
+        model = model.cpu()
         return model
 
     def convert(
@@ -108,7 +110,10 @@ class ONNXConverter:
 
         # Get PyTorch model output
         with torch.no_grad():
-            pytorch_output = self.model(dummy_input).numpy()
+            # Ensure model and input are on the same device (CPU)
+            model_cpu = self.model.cpu()
+            input_cpu = dummy_input.cpu()
+            pytorch_output = model_cpu(input_cpu).numpy()
 
         # Get ONNX model output
         onnx_output = ort_session.run(None, {"input": dummy_input.numpy()})[0]

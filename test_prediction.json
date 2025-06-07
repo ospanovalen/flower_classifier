@@ -1,0 +1,12 @@
+{
+  "image_path": "data/raw/roses/6105809987_8f3d7a8d67_n.jpg",
+  "predicted_class": "roses",
+  "confidence": 0.9884125590324402,
+  "all_probabilities": {
+    "daisy": 0.000604462344199419,
+    "tulips": 5.243674968369305e-5,
+    "sunflowers": 0.0001199625403387472,
+    "dandelion": 0.010810625739395618,
+    "roses": 0.9884125590324402
+  }
+}

@@ -25,6 +25,8 @@ requests = "^2.31.0"
 fastapi = "^0.104.0"
 uvicorn = "^0.24.0"
 python-multipart = "^0.0.6"
+onnx = "^1.18.0"
+onnxruntime = "^1.22.0"
 
 [tool.poetry.group.dev.dependencies]
 pandas = "^2.2.0"
@@ -42,11 +44,13 @@ build-backend = "poetry.core.masonry.api"
 
 
 
+
 [tool.poetry.group.gpu]
 optional = true
 
 [tool.poetry.group.gpu.dependencies]
 torch = "2.7.1"
+
 
 
 
@@ -59,6 +63,7 @@ optional = true
 black = "^24.2.0"
 isort = "^5.13.2"
 pylint = "^3.2.5"
+
 
 
 

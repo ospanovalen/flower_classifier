@@ -2,6 +2,7 @@
 
 import io
 import logging
+import os
 from pathlib import Path
 from typing import Dict, List
 
@@ -10,6 +11,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from PIL import Image
 from pydantic import BaseModel
 
+from ..data.dataset import get_default_transforms
 from ..models.flower_model import FlowerClassifier
 
 logger = logging.getLogger(__name__)
@@ -51,6 +53,7 @@ class FlowerInferenceServer:
 
         self.device = torch.device(device)
         self.model = None
+        self.transforms = get_default_transforms(size=224)
         self._load_model()
 
     def _load_model(self):
@@ -86,7 +89,7 @@ class FlowerInferenceServer:
                 image = image.convert("RGB")
 
             # Transform image
-            input_tensor = self.model.transform(image).unsqueeze(0)
+            input_tensor = self.transforms(image).unsqueeze(0)
             input_tensor = input_tensor.to(self.device)
 
             # Make prediction
@@ -119,17 +122,20 @@ class FlowerInferenceServer:
 inference_server = None
 
 
-def create_app(model_path: str, device: str = "auto") -> FastAPI:
+def create_app() -> FastAPI:
     """Create FastAPI app.
-
-    Args:
-        model_path: Path to model checkpoint
-        device: Device to run inference on
 
     Returns:
         FastAPI app instance
     """
     global inference_server
+
+    # Get parameters from environment variables
+    model_path = os.environ.get("FLOWER_MODEL_PATH")
+    device = os.environ.get("FLOWER_DEVICE", "auto")
+
+    if not model_path:
+        raise ValueError("FLOWER_MODEL_PATH environment variable must be set")
 
     app = FastAPI(
         title="Flower Classification API",
@@ -229,6 +235,6 @@ if __name__ == "__main__":
 
     # Example usage
     model_path = "models/best_model.ckpt"
-    app = create_app(model_path)
+    app = create_app()
 
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")

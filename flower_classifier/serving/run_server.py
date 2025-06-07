@@ -1,5 +1,7 @@
 """CLI script to run FastAPI inference server."""
 
+import os
+
 import click
 import uvicorn
 
@@ -21,6 +23,10 @@ def run_server(
     print(f"Server: http://{host}:{port}")
     print(f"Workers: {workers}")
 
+    # Set environment variables for the app factory
+    os.environ["FLOWER_MODEL_PATH"] = model_path
+    os.environ["FLOWER_DEVICE"] = device
+
     # Run server
     uvicorn.run(
         "flower_classifier.serving.fastapi_server:create_app",
@@ -30,8 +36,6 @@ def run_server(
         workers=workers if not reload else 1,
         reload=reload,
         log_level="info",
-        app_dir=".",
-        kwargs={"model_path": model_path, "device": device},
     )
 
 
