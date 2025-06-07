@@ -192,3 +192,32 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# MLflow artifacts
+mlruns/
+models/*.ckpt
+models/*.pth
+models/*.pt
+models/*.onnx
+models/*.trt
+models/*.engine
+
+# Model checkpoints and weights
+*.ckpt
+*.pth
+*.pt
+*.safetensors
+*.bin
+
+# TensorRT engines
+*.trt
+*.engine
+*.plan
+
+# ONNX models
+*.onnx
+
+# Plots and outputs
+plots/
+logs/
+outputs/

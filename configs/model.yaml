@@ -1,0 +1,9 @@
+model_name: rexnet_150
+num_classes: 5
+learning_rate: 0.001
+contrastive_margin: 0.3
+
+epochs: 50
+monitor_metric: val_loss
+monitor_mode: min
+patience: 10

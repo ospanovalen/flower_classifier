@@ -1,0 +1,6 @@
+artifact_location: file:///home/alen/mlops/flower_classifier/mlruns/410973275979575099
+creation_time: 1749304934370
+experiment_id: '410973275979575099'
+last_update_time: 1749304934370
+lifecycle_stage: active
+name: flower_classification

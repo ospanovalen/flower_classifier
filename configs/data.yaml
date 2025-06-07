@@ -1,0 +1,10 @@
+data_dir: data/raw
+image_size: 224
+batch_size: 16
+seed: 2024
+num_workers: 4
+
+split:
+  train: 0.8
+  val: 0.1
+  test: 0.1

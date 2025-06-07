@@ -10,8 +10,7 @@ from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
 from lightning.pytorch.loggers import MLFlowLogger
 from omegaconf import DictConfig
 
-from flower_classifier.data.dataset import (get_data_loaders,
-                                            get_default_transforms)
+from flower_classifier.data.dataset import get_data_loaders, get_default_transforms
 from flower_classifier.models.flower_model import FlowerClassifier
 from flower_classifier.utils import init_basic_logger
 

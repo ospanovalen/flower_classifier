@@ -1,0 +1,15 @@
+artifact_uri: file:///home/alen/mlops/flower_classifier/mlruns/410973275979575099/77707fc6937749ae9ac0dcdd175aeed9/artifacts
+end_time: 1749306686196
+entry_point_name: ''
+experiment_id: '410973275979575099'
+lifecycle_stage: active
+run_id: 77707fc6937749ae9ac0dcdd175aeed9
+run_name: flower_classification_run
+run_uuid: 77707fc6937749ae9ac0dcdd175aeed9
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1749304959285
+status: 3
+tags: []
+user_id: alen
