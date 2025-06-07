@@ -68,10 +68,10 @@ class FlowerInferenceServer:
             self.model.eval()
             self.model.to(self.device)
 
-            logger.info(f"✅ Model loaded successfully on {self.device}")
+            logger.info(f"Model loaded successfully on {self.device}")
 
         except Exception as e:
-            logger.error(f"❌ Failed to load model: {e}")
+            logger.error(f"Failed to load model: {e}")
             raise
 
     def predict_image(self, image: Image.Image) -> PredictionResponse:
@@ -114,7 +114,7 @@ class FlowerInferenceServer:
             )
 
         except Exception as e:
-            logger.error(f"❌ Prediction failed: {e}")
+            logger.error(f"Prediction failed: {e}")
             raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -186,7 +186,7 @@ def create_app() -> FastAPI:
             return result
 
         except Exception as e:
-            logger.error(f"❌ Error processing upload: {e}")
+            logger.error(f"Error processing upload: {e}")
             raise HTTPException(status_code=500, detail=str(e))
 
     @app.post("/predict/batch", response_model=BatchPredictionResponse)

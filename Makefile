@@ -63,8 +63,13 @@ start-api-server:
 		--device $(device) \
 		--workers $(workers)
 
+download-data:
+	${POETRY_RUN} python -m flower_classifier.data.download_data
+
 ddvc-dataset:
-	dvc pull
+	@echo "Downloading data from Google Drive (primary method)..."
+	@${POETRY_RUN} python -m flower_classifier.data.download_data || echo "Google Drive download failed, trying DVC..."
+	@dvc pull || echo "Both methods failed. Please manually download flower_data.tar.gz"
 
 pre-commit-install:
 	${POETRY_RUN} pre-commit install
@@ -75,4 +80,4 @@ test:
 mlflow-ui:
 	${POETRY_RUN} mlflow ui --host 127.0.0.1 --port 8080
 
-.PHONY: format run-train run-inference-pipeline run-inference convert-to-onnx convert-to-tensorrt convert-to-tensorrt-run run-tensorrt-inference start-mlflow-server mlflow-server-predict mlflow-server-status start-api-server ddvc-dataset pre-commit-install test mlflow-ui
+.PHONY: format run-train run-inference-pipeline run-inference convert-to-onnx convert-to-tensorrt convert-to-tensorrt-run run-tensorrt-inference start-mlflow-server mlflow-server-predict mlflow-server-status start-api-server download-data ddvc-dataset pre-commit-install test mlflow-ui

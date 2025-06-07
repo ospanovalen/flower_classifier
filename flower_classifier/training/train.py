@@ -11,39 +11,43 @@ from lightning.pytorch.loggers import MLFlowLogger
 from omegaconf import DictConfig
 
 from flower_classifier.data.dataset import get_data_loaders, get_default_transforms
+from flower_classifier.data.download_data import download_data
 from flower_classifier.models.flower_model import FlowerClassifier
 from flower_classifier.utils import init_basic_logger
 
 
 def setup_data(cfg: DictConfig) -> None:
-    """Setup data by pulling from DVC if needed."""
+    """Setup data by downloading from Google Drive if needed."""
     logger = init_basic_logger(__name__)
     data_path = Path(cfg.paths.data_dir)
 
     # Check if data directory exists and has content
     if not data_path.exists() or not any(data_path.iterdir()):
-        logger.info("Data directory empty or missing, pulling from DVC...")
+        logger.info("Data directory empty or missing, downloading from Google Drive...")
         try:
-            # Use DVC Python API to pull data
-            import dvc.api
-
-            dvc.api.dvc_pull()
-            logger.info("✅ Data successfully pulled from DVC")
-        except ImportError:
-            # Fallback to CLI if DVC API not available
-            logger.info("DVC API not available, using CLI...")
-            result = subprocess.run(
-                ["dvc", "pull"], capture_output=True, text=True, cwd=Path.cwd()
-            )
-            if result.returncode == 0:
-                logger.info("✅ Data successfully pulled from DVC")
-            else:
-                logger.warning(f"DVC pull failed: {result.stderr}")
+            # Download data from Google Drive
+            download_data(str(data_path.parent))
+            logger.info("Data successfully downloaded from Google Drive")
         except Exception as e:
-            logger.warning(f"Could not pull data from DVC: {e}")
-            logger.info("Continuing with existing data...")
+            logger.warning(f"Could not download data from Google Drive: {e}")
+            logger.info(
+                "Please manually download flower_data.tar.gz and extract to data/"
+            )
+
+            # Fallback to DVC if available
+            try:
+                logger.info("Attempting DVC pull as fallback...")
+                result = subprocess.run(
+                    ["dvc", "pull"], capture_output=True, text=True, cwd=Path.cwd()
+                )
+                if result.returncode == 0:
+                    logger.info("Data successfully pulled from DVC fallback")
+                else:
+                    logger.warning(f"DVC pull also failed: {result.stderr}")
+            except Exception as dvc_e:
+                logger.warning(f"DVC fallback also failed: {dvc_e}")
     else:
-        logger.info("Data directory exists, skipping DVC pull")
+        logger.info("Data directory exists, skipping download")
 
 
 def setup_directories(cfg: DictConfig) -> None:

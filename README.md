@@ -1,4 +1,4 @@
-# Flower Classification using Contrastive Learning
+# Классификатор цветов с Contrastive Learning
 
 Проект для классификации изображений цветов с использованием метрического обучения (contrastive learning) и современного MLOps-пайплайна.
 
@@ -83,21 +83,47 @@ poetry run pre-commit install
 
 ### Загрузка данных
 
-DVC автоматически интегрирован в процесс обучения. При запуске тренировки данные будут загружены автоматически через Python API, если они отсутствуют:
+**Автоматическая загрузка с Google Drive (рекомендуется):**
+
+При первом запуске тренировки данные автоматически загрузятся с Google Drive. Если вы хотите загрузить их заранее:
 
 ```bash
-# Ручная загрузка данных (опционально)
-dvc pull
+# Автоматическая загрузка данных с Google Drive
+make download-data
 
-# Проверка статуса данных
-dvc status
+# Или напрямую
+poetry run python -m flower_classifier.data.download_data
 ```
 
-**Автоматическая интеграция DVC:**
+**Настройка Google Drive (для разработчиков):**
+
+Если вы форкаете проект и хотите использовать свой Google Drive:
+
+1. Загрузите архив `flower_data.tar.gz` в свой Google Drive
+2. Сделайте файл публичным ("Все в интернете с ссылкой")
+3. Скопируйте ID файла из ссылки: `https://drive.google.com/file/d/FILE_ID/view`
+4. Обновите `file_id` в `flower_classifier/data/download_data.py`
+
+**Резервные методы:**
+
+```bash
+# Через DVC (если настроен)
+dvc pull
+
+# Комбинированный метод (Google Drive + DVC fallback)
+make ddvc-dataset
+
+# Ручная загрузка
+# 1. Скачайте flower_data.tar.gz с https://drive.google.com/file/d/1n-DjQGxlEd4iH9skG8xosnfQMSvWm4kf/view
+# 2. Распакуйте: tar -xzf flower_data.tar.gz
+# 3. Переместите папку raw в data/
+```
+
+**Автоматическая интеграция:**
 
 - Функция `setup_data()` в `training/train.py` проверяет наличие данных
-- При отсутствии автоматически вызывает `repo.pull()` через DVC Python API
-- Fallback на CLI команды в случае ошибок API
+- При отсутствии автоматически загружает с Google Drive через `gdown`
+- Fallback на DVC в случае ошибок загрузки
 
 ## Train
 
@@ -608,7 +634,8 @@ poetry run python -m flower_classifier.inference.predict \
 ```bash
 # Обучение и данные
 make run-train                      # Запуск обучения
-make ddvc-dataset                   # Загрузка данных через DVC (если есть)
+make download-data                  # Загрузка данных с Google Drive
+make ddvc-dataset                   # Комбинированная загрузка (Google Drive + DVC fallback)
 
 # Inference
 make run-inference                  # Batch inference (PyTorch)

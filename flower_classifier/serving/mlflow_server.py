@@ -220,7 +220,7 @@ def start(model_uri: str, host: str, port: int, workers: int, timeout: int):
     try:
         success = server.start_server(workers, timeout)
         if success:
-            print(f"🚀 Server started at {server.server_url}")
+            print(f"Server started at {server.server_url}")
             print("Press Ctrl+C to stop...")
 
             # Keep server running
