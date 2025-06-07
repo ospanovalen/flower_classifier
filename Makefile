@@ -23,15 +23,22 @@ convert-to-onnx:
 		--checkpoint-path $(model) \
 		--output-path $(output)
 
-dd:
-	@dvc remote modify multimodal_embeddings --local access_key_id $(DVC_ACCESS_KEY_ID)
-	@dvc remote modify multimodal_embeddings --local secret_access_key $(DVC_SECRET_ACCESS_KEY)
-	@dvc config core.no_scm true
+convert-to-tensorrt:
+	@echo "Usage: make convert-to-tensorrt input=<onnx_path> output=<trt_path> [batch=1] [precision=fp16]"
+	@echo "Example: make convert-to-tensorrt input=models/model.onnx output=models/model.trt batch=4 precision=fp16"
 
-ddvc-model: dd
-	dvc pull
+convert-to-tensorrt-run:
+	./scripts/convert_to_tensorrt.sh $(input) $(output) $(batch) $(precision)
 
-ddvc-dataset: dd
+run-tensorrt-inference:
+	${MANAGER} python -m flower_classifier.production.tensorrt_inference \
+		--engine-path $(engine) \
+		--image-path $(image) \
+		$(if $(output),--output-file $(output),) \
+		$(if $(benchmark),--benchmark,) \
+		$(if $(iterations),--iterations $(iterations),)
+
+ddvc-dataset:
 	dvc pull
 
 pre-commit-install:
@@ -43,4 +50,4 @@ test:
 mlflow-ui:
 	${MANAGER} mlflow ui --host 127.0.0.1 --port 8080
 
-.PHONY: format run-train run-inference-pipeline run-inference convert-to-onnx dd ddvc-model ddvc-dataset pre-commit-install test mlflow-ui
+.PHONY: format run-train run-inference-pipeline run-inference convert-to-onnx convert-to-tensorrt convert-to-tensorrt-run run-tensorrt-inference ddvc-dataset pre-commit-install test mlflow-ui
