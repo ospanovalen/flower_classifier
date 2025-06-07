@@ -220,7 +220,7 @@ def create_app() -> FastAPI:
                 predictions.append(result)
 
             except Exception as e:
-                logger.error(f"❌ Error processing {file.filename}: {e}")
+                logger.error(f"Error processing {file.filename}: {e}")
                 raise HTTPException(
                     status_code=500, detail=f"Error processing {file.filename}: {e}"
                 )

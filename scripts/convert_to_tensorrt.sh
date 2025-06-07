@@ -47,7 +47,7 @@ fi
 OUTPUT_DIR=$(dirname "$TRT_PATH")
 mkdir -p "$OUTPUT_DIR"
 
-echo "🔧 Converting ONNX to TensorRT..."
+echo "Converting ONNX to TensorRT..."
 echo "Input:  $ONNX_PATH"
 echo "Output: $TRT_PATH"
 echo "Batch:  $BATCH_SIZE"
@@ -92,12 +92,11 @@ if [ $? -eq 0 ]; then
     # Display file info
     if [ -f "$TRT_PATH" ]; then
         FILE_SIZE=$(du -h "$TRT_PATH" | cut -f1)
-        echo "📊 Engine size: $FILE_SIZE"
+        echo "Engine size: $FILE_SIZE"
     fi
 
     echo ""
-    echo "🔍 To test the engine, you can use:"
-    echo "   trtexec --loadEngine=$TRT_PATH --shapes=input:${BATCH_SIZE}x3x224x224"
+    echo "To test the engine, you can use:"
 else
     echo ""
     echo "TensorRT conversion failed!"

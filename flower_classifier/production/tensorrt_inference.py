@@ -267,20 +267,18 @@ def main(
             logger.info(f"Running benchmark with {iterations} iterations...")
             stats = predictor.benchmark(image, iterations)
 
-            print("\n🚀 TensorRT Benchmark Results:")
-            print(f"⏱️  Total time: {stats['total_time']:.3f}s")
-            print(
-                f"📊 Avg time per image: " f"{stats['avg_time_per_image']*1000:.2f}ms"
-            )
-            print(f"🔥 Throughput: " f"{stats['images_per_second']:.1f} images/sec")
+            print("\nTensorRT Benchmark Results:")
+            print(f"Total time: {stats['total_time']:.3f}s")
+            print(f"Avg time per image: " f"{stats['avg_time_per_image']*1000:.2f}ms")
+            print(f"Throughput: " f"{stats['images_per_second']:.1f} images/sec")
 
         # Make prediction
         result = predictor.predict(image)
 
-        print(f"\n🌸 Prediction for {image_path}:")
-        print(f"🎯 Class: {result['predicted_class']}")
-        print(f"📊 Confidence: {result['confidence']:.3f}")
-        print("\n📈 All probabilities:")
+        print(f"\nPrediction for {image_path}:")
+        print(f"Class: {result['predicted_class']}")
+        print(f"Confidence: {result['confidence']:.3f}")
+        print("\nAll probabilities:")
         for class_name, prob in result["all_probabilities"].items():
             print(f"   {class_name}: {prob:.3f}")
 
@@ -293,7 +291,7 @@ def main(
 
             with open(output_file, "w") as f:
                 json.dump(result, f, indent=2)
-            print(f"\n💾 Results saved to {output_file}")
+            print(f"\nResults saved to {output_file}")
 
     except Exception as e:
         logger.error(f"Error during inference: {e}")

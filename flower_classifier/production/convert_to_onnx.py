@@ -80,7 +80,7 @@ class ONNXConverter:
             verbose=True,
         )
 
-        print(f"✅ Model successfully converted to ONNX: {output_path}")
+        print(f"Model successfully converted to ONNX: {output_path}")
 
         # Verify the exported model
         self._verify_onnx_model(output_path, dummy_input)
@@ -97,7 +97,7 @@ class ONNXConverter:
             import onnx
             import onnxruntime as ort
         except ImportError:
-            print("⚠️  ONNX verification skipped: onnx/onnxruntime not installed")
+            print("ONNX verification skipped: onnx/onnxruntime not installed")
             print("   Install with: pip install onnx onnxruntime")
             return
 
@@ -121,9 +121,9 @@ class ONNXConverter:
         # Compare outputs
         diff = abs(pytorch_output - onnx_output).max()
         if diff < 1e-5:
-            print(f"✅ ONNX model verification passed (max diff: {diff:.2e})")
+            print(f"ONNX model verification passed (max diff: {diff:.2e})")
         else:
-            print(f"⚠️  ONNX model verification failed (max diff: {diff:.2e})")
+            print(f"ONNX model verification failed (max diff: {diff:.2e})")
 
 
 @click.command()

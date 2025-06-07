@@ -25,7 +25,7 @@ def download_data(data_dir: str = "data") -> None:
         return
 
     # Google Drive file ID for the flower dataset archive
-    # From: https://drive.google.com/file/d/1n-DjQGxlEd4iH9skG8xosnfQMSvWm4kf/view
+    # From Google Drive (see README for full URL)
     file_id = "1n-DjQGxlEd4iH9skG8xosnfQMSvWm4kf"
 
     # Download archive
