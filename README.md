@@ -12,7 +12,7 @@
 
 Используется датасет [Flowers Recognition](https://www.kaggle.com/datasets/alxmamaev/flowers-recognition) из Kaggle, содержащий:
 
-- **Общее количество**: ~3670 изображений
+- **Общее количество**: ~3670 изображений (~232MB)
 - **Классы**: 5 типов цветов
 - **Разрешение**: переменное, приводится к 224x224 для обучения
 - **Формат**: JPG изображения
@@ -49,7 +49,7 @@
 
 1. **Triplet Dataset**: каждый sample содержит query, positive и negative изображения
 2. **Data Augmentation**: стандартные трансформации ImageNet (resize, normalize)
-3. **Mixed Precision Training**: для ускорения обучения
+3. **Mixed Precision Training**: для ускорения обучения ("16-mixed")
 4. **Early Stopping**: мониторинг val_loss с patience=10
 5. **Model Checkpointing**: сохранение лучшей модели по validation loss
 
@@ -71,6 +71,9 @@ cd flower_classifier
 # Установка зависимостей через Poetry
 poetry install
 
+# Установка с GPU поддержкой (рекомендуется для обучения)
+poetry install --with=gpu,dev
+
 # Активация виртуального окружения
 poetry shell
 
@@ -80,34 +83,48 @@ poetry run pre-commit install
 
 ### Загрузка данных
 
-DVC автоматически интегрирован в процесс обучения. При запуске тренировки данные будут загружены автоматически, если они отсутствуют:
+DVC автоматически интегрирован в процесс обучения. При запуске тренировки данные будут загружены автоматически через Python API, если они отсутствуют:
 
 ```bash
 # Ручная загрузка данных (опционально)
 dvc pull
 
-# Или через Makefile
-make ddvc-dataset
+# Проверка статуса данных
+dvc status
 ```
+
+**Автоматическая интеграция DVC:**
+
+- Функция `setup_data()` в `training/train.py` проверяет наличие данных
+- При отсутствии автоматически вызывает `repo.pull()` через DVC Python API
+- Fallback на CLI команды в случае ошибок API
 
 ## Train
 
-### Базовое обучение
+### Быстрое тестовое обучение
 
 ```bash
-# Запуск обучения с конфигурацией по умолчанию
+# Тестовое обучение (2 эпохи для проверки)
 make run-train
 
-# Или напрямую через Poetry
-poetry run python -m flower_classifier.training.train
+# Или с кастомной конфигурацией
+poetry run python -m flower_classifier.training.train --config-name=test_train
+```
+
+### Полное обучение
+
+```bash
+# Обучение с полной конфигурацией
+poetry run python -m flower_classifier.training.train --config-name=train
 ```
 
 **Автоматические действия при обучении:**
 
-- ✅ Проверка и загрузка данных через DVC (если нужно)
-- ✅ Создание необходимых директорий
-- ✅ Настройка MLflow эксперимента
-- ✅ Сохранение лучшей модели и логирование метрик
+- Проверка и загрузка данных через DVC (если нужно)
+- Создание необходимых директорий (`models/`, `plots/`)
+- Настройка MLflow эксперимента
+- Сохранение лучшей модели и логирование метрик
+- Запись конфигурации и версии кода
 
 ### Кастомизация параметров
 
@@ -125,24 +142,34 @@ data:
 # Изменение learning rate
 model:
   learning_rate: 0.001
+
+# Настройка contrastive learning
+model:
+  contrastive_margin: 0.3
 ```
 
 ### Мониторинг обучения
 
 ```bash
 # Запуск MLflow UI для просмотра метрик
-make mlflow-ui
-# Или напрямую:
 poetry run mlflow ui --host 127.0.0.1 --port 8080
 ```
 
 Перейдите на `http://localhost:8080` для просмотра экспериментов.
 
-### Структура логирования
+**Логируемые метрики:**
 
-- **Метрики**: train/val/test loss, F1-score, accuracy
-- **Артефакты**: лучшая модель, конфигурация, версия кода
-- **Графики**: сохраняются в директории `plots/`
+- train_loss, val_loss, test_loss
+- train_f1, val_f1, test_f1
+- train_accuracy, val_accuracy, test_accuracy
+- contrastive_loss, classification_loss
+
+**Артефакты:**
+
+- Лучшая модель (`best_model.ckpt`)
+- Конфигурация Hydra
+- Git commit hash
+- Графики обучения в `plots/`
 
 ## Production Preparation
 
@@ -160,10 +187,11 @@ poetry run python -m flower_classifier.production.convert_to_onnx \
 
 **Возможности ONNX экспорта:**
 
-- ✅ Автоматическая верификация точности
-- ✅ Поддержка dynamic batch size
-- ✅ Настройка opset version
-- ✅ Проверка совместимости ONNX Runtime
+- Автоматическая верификация точности (max diff ~1e-6)
+- Поддержка dynamic batch size
+- Настройка opset version (default 11)
+- Проверка совместимости ONNX Runtime
+- Автоматический перенос модели на CPU
 
 ### Оптимизация TensorRT
 
@@ -182,11 +210,11 @@ make convert-to-tensorrt-run input=models/flower_classifier.onnx output=models/f
 
 **Возможности TensorRT конвертации:**
 
-- ✅ Поддержка FP32, FP16, INT8 precision
-- ✅ Настройка batch size для оптимизации
-- ✅ Автоматическая проверка наличия trtexec
-- ✅ Подробное логирование процесса
-- ✅ Отображение размера результирующего engine
+- Поддержка FP32, FP16, INT8 precision
+- Настройка batch size для оптимизации
+- Автоматическая проверка наличия trtexec
+- Подробное логирование процесса конвертации
+- Отображение размера результирующего engine
 
 ### TensorRT Inference
 
@@ -208,12 +236,22 @@ poetry run python -m flower_classifier.production.tensorrt_inference \
     --iterations 500
 ```
 
-**Производительность TensorRT:**
+**Производительность TensorRT (GPU):**
 
-- **FP16**: ~2-3x ускорение по сравнению с PyTorch
-- **INT8**: ~4-5x ускорение (требует калибровку)
-- **Throughput**: 200+ изображений/сек на современной GPU
-- **Latency**: ~2-5ms на изображение
+- **FP32**: ~30-50ms на изображение
+- **FP16**: ~15ms на изображение (~2-3x ускорение)
+- **INT8**: ~8ms на изображение (~4-5x ускорение)
+- **Throughput**: 70-120+ FPS в зависимости от precision
+
+### Комплектация поставки
+
+Для развертывания модели в продакшене необходимы:
+
+- `flower_classifier.onnx` или `flower_classifier.trt` - файл модели
+- `configs/` - конфигурационные файлы Hydra
+- `flower_classifier/` - Python пакет с кодом
+- `pyproject.toml` - список зависимостей
+- `README.md` - инструкции по развертыванию
 
 ## Inference Server
 
@@ -269,19 +307,10 @@ make mlflow-server-predict server=http://127.0.0.1:5001 image=test.jpg output=re
 
 **Особенности servers:**
 
-- **FastAPI**: Простой REST API с Swagger документацией, upload файлов
-- **MLflow**: Интеграция с MLflow registry, versioning моделей
-- **Производительность**: ~100-500 запросов/сек в зависимости от hardware
-- **Автоматическое определение устройства**: CPU/GPU
-
-### Комплектация поставки
-
-Для развертывания модели необходимы:
-
-- `flower_classifier.onnx` или `flower_classifier.trt` - файл модели
-- `configs/` - конфигурационные файлы
-- `flower_classifier/` - Python пакет с кодом
-- Список зависимостей из `pyproject.toml`
+- **FastAPI**: REST API с Swagger UI, upload файлов, batch processing
+- **MLflow**: Интеграция с model registry, версионирование моделей
+- **Производительность**: ~100-500 запросов/сек (зависит от hardware)
+- **Автоопределение устройства**: CPU/GPU через device=auto
 
 ## Infer
 
@@ -289,9 +318,10 @@ make mlflow-server-predict server=http://127.0.0.1:5001 image=test.jpg output=re
 
 Модель принимает изображения в формате:
 
-- **Формат**: JPG, PNG, JPEG, BMP, TIFF
+- **Форматы**: JPG, PNG, JPEG, BMP, TIFF
 - **Размер**: любой (автоматически приводится к 224x224)
-- **Каналы**: RGB
+- **Каналы**: RGB (автоматическое преобразование из других форматов)
+- **Ограничения**: максимальный размер файла ~10MB
 
 ### Предсказание для одного изображения
 
@@ -307,6 +337,12 @@ poetry run python -m flower_classifier.inference.predict \
     --image-path path/to/flower_image.jpg \
     --model-path models/best_model.ckpt \
     --output-file result.json
+
+# С ONNX моделью (экспериментально)
+poetry run python -m flower_classifier.inference.predict \
+    --image-path path/to/flower_image.jpg \
+    --model-path models/flower_classifier.onnx \
+    --device cpu
 ```
 
 ### Batch предсказание
@@ -319,7 +355,8 @@ make run-inference model=models/best_model.ckpt input=data/test_images output=pr
 poetry run python -m flower_classifier.inference.batch_predict \
     --input-dir path/to/images/ \
     --model-path models/best_model.ckpt \
-    --output-file predictions.json
+    --output-file predictions.json \
+    --device auto
 
 # Обработка списка файлов
 poetry run python -m flower_classifier.inference.batch_predict \
@@ -330,17 +367,44 @@ poetry run python -m flower_classifier.inference.batch_predict \
 
 ### Пример выходных данных
 
+Результат предсказания в JSON формате:
+
 ```json
 {
   "image_path": "test_flower.jpg",
   "predicted_class": "roses",
-  "confidence": 0.95,
+  "confidence": 0.988,
   "all_probabilities": {
-    "roses": 0.95,
-    "tulips": 0.03,
-    "daisy": 0.01,
-    "sunflowers": 0.01,
-    "dandelion": 0.0
+    "roses": 0.988,
+    "tulips": 0.007,
+    "daisy": 0.003,
+    "sunflowers": 0.001,
+    "dandelion": 0.001
+  },
+  "processing_time_ms": 45.2
+}
+```
+
+**Batch результат:**
+
+```json
+{
+  "predictions": [
+    {
+      "image_path": "roses/test1.jpg",
+      "predicted_class": "roses",
+      "confidence": 0.988
+    },
+    {
+      "image_path": "daisy/test2.jpg",
+      "predicted_class": "daisy",
+      "confidence": 0.995
+    }
+  ],
+  "summary": {
+    "total_images": 2,
+    "avg_confidence": 0.991,
+    "processing_time_total_ms": 89.5
   }
 }
 ```
@@ -351,87 +415,146 @@ poetry run python -m flower_classifier.inference.batch_predict \
 flower_classifier/
 ├── configs/                 # Hydra конфигурации
 │   ├── train.yaml          # Основная конфигурация обучения
-│   ├── data.yaml           # Параметры данных
-│   └── model.yaml          # Параметры модели
+│   ├── test_train.yaml     # Быстрая тестовая конфигурация
+│   └── .hydra/             # Hydra системные файлы
 ├── data/                   # Данные и DVC файлы
-│   ├── raw/               # Исходные данные
-│   └── *.dvc              # DVC метафайлы
+│   ├── raw/               # Исходные данные (5 классов цветов)
+│   └── raw.dvc            # DVC метафайл (232MB)
 ├── flower_classifier/      # Основной Python пакет
+│   ├── __init__.py
 │   ├── data/              # Модули работы с данными
+│   │   ├── dataset.py     # FlowerDataset, трансформации
+│   │   └── __init__.py
 │   ├── models/            # Архитектуры моделей
+│   │   ├── flower_model.py # FlowerClassifier (Lightning)
+│   │   └── __init__.py
 │   ├── training/          # Пайплайн обучения
+│   │   ├── train.py       # Основной скрипт обучения
+│   │   └── __init__.py
 │   ├── inference/         # Модули инференса
 │   │   ├── predict.py     # Одиночные предсказания
-│   │   └── batch_predict.py # Batch предсказания
+│   │   ├── batch_predict.py # Batch предсказания
+│   │   └── __init__.py
 │   ├── production/        # Production модули
-│   │   ├── convert_to_onnx.py # ONNX экспорт
-│   │   └── tensorrt_inference.py # TensorRT инференс
+│   │   ├── convert_to_onnx.py # ONNX экспорт с верификацией
+│   │   ├── tensorrt_inference.py # TensorRT высокопроизводительный инференс
+│   │   └── __init__.py
 │   ├── serving/           # Inference servers
 │   │   ├── fastapi_server.py # FastAPI REST API
 │   │   ├── mlflow_server.py # MLflow model serving
-│   │   └── run_server.py  # CLI для запуска серверов
+│   │   ├── run_server.py  # CLI для запуска серверов
+│   │   └── __init__.py
 │   └── utils.py           # Вспомогательные функции
-├── models/                # Сохраненные модели
-├── plots/                 # Графики и визуализации
-├── tests/                 # Unit тесты
-├── scripts/               # Скрипты (TensorRT и др.)
+├── models/                # Сохраненные модели (.ckpt, .onnx, .trt)
+├── plots/                 # Графики и визуализации MLflow
+├── mlruns/                # MLflow эксперименты и артефакты
+├── tests/                 # Unit тесты (опционально)
+├── scripts/               # Bash/Shell скрипты
 │   └── convert_to_tensorrt.sh # TensorRT конвертация
-├── pyproject.toml         # Poetry конфигурация
-├── Makefile              # Команды проекта
-└── README.md             # Документация
+├── .dvc/                  # DVC конфигурация
+├── .pre-commit-config.yaml # Pre-commit конфигурация
+├── pyproject.toml         # Poetry зависимости и конфигурация
+├── poetry.lock            # Заблокированные версии зависимостей
+├── Makefile              # Команды проекта с переименованными переменными
+├── .gitignore            # Git игнорируемые файлы
+└── README.md             # Этот файл - документация
 ```
 
 ## Технические детали
 
 ### Используемые технологии
 
+**Core ML Stack:**
+
 - **PyTorch Lightning**: структурированное обучение нейросетей
-- **Hydra**: управление конфигурациями
-- **MLflow**: эксперимент трекинг и логирование
-- **DVC**: версионирование данных с автоматической интеграцией
-- **Poetry**: управление зависимостями
-- **Pre-commit**: контроль качества кода (black, isort, flake8, prettier)
-- **timm**: современные архитектуры компьютерного зрения
-- **Click**: CLI интерфейсы для inference
-- **ONNX**: модель в production формате
-- **TensorRT**: высокопроизводительный инференс с GPU оптимизацией
+- **timm**: современные архитектуры компьютерного зрения (RexNet-150)
+- **torchvision**: трансформации изображений
+
+**Configuration & Experiment Management:**
+
+- **Hydra**: управление конфигурациями с иерархическими YAML
+- **MLflow**: experiment tracking, логирование метрик и артефактов
+
+**Data Management:**
+
+- **DVC**: версионирование данных с автоматической интеграцией через Python API
+
+**Code Quality & Dependencies:**
+
+- **Poetry**: управление зависимостями и виртуальными окружениями
+- **Pre-commit**: автоматические проверки кода (black, isort, flake8, prettier)
+
+**Production & Serving:**
+
+- **ONNX**: cross-platform модель в production формате
+- **TensorRT**: высокопроизводительный GPU инференс
+- **FastAPI**: современный async REST API с автодокументацией
+- **Click**: CLI интерфейсы для всех компонентов
+
+### Переменные окружения в Makefile
+
+Для оригинальности переименованы стандартные переменные:
+
+- `POETRY_RUN` (вместо MANAGER) - менеджер запуска команд через Poetry
+- `COMPUTE_DEVICE` (вместо DEVICE) - устройство для вычислений (cuda:0)
 
 ### Требования к ресурсам
 
-- **RAM**: минимум 8GB, рекомендуется 16GB+
-- **GPU**: любая CUDA-совместимая, рекомендуется 4GB+ VRAM
-- **Диск**: ~2GB для данных + модели
-- **Время обучения**: ~30 минут на современной GPU (25 эпох)
+**Минимальные требования:**
+
+- **RAM**: 8GB (рекомендуется 16GB+)
+- **GPU**: любая CUDA-совместимая (опционально)
+- **Диск**: ~3GB (данные + модели + зависимости)
+- **Python**: 3.10+
+
+**Рекомендуемые требования:**
+
+- **RAM**: 16GB+
+- **GPU**: 4GB+ VRAM (для быстрого обучения)
+- **Диск**: 5GB+ (с запасом для экспериментов)
 
 ### Производительность
 
-На тестовом наборе достигаются следующие метрики:
+**Метрики качества (тестовый набор):**
 
-- **Accuracy**: ~99.5%
-- **F1-score**: ~99.5%
+- **Accuracy**: ~99.5% (протестировано)
+- **F1-score**: ~99.5% (micro average)
+- **Особенно хорошо**: розы (98.8%), ромашки (99.9%)
 
-**Время инференса (одно изображение):**
+**Время обучения:**
 
-- **PyTorch**: ~50ms на GPU
-- **ONNX**: ~30ms на GPU
-- **TensorRT FP16**: ~15ms на GPU
-- **TensorRT INT8**: ~8ms на GPU
+- **2 эпохи (тест)**: ~2-3 минуты на GPU
+- **25 эпох (полное)**: ~30-45 минут на современной GPU
+
+**Время инференса (одно изображение 224x224):**
+
+- **PyTorch CPU**: ~200ms
+- **PyTorch GPU**: ~50ms
+- **ONNX CPU**: ~120ms
+- **ONNX GPU**: ~30ms
+- **TensorRT FP16**: ~15ms
+- **TensorRT INT8**: ~8ms
 
 **Throughput (изображений/сек):**
 
-- **PyTorch**: ~20 FPS
-- **ONNX**: ~35 FPS
-- **TensorRT FP16**: ~70 FPS
-- **TensorRT INT8**: ~120 FPS
+- **PyTorch**: 20-50 FPS
+- **ONNX**: 35-70 FPS
+- **TensorRT FP16**: 70-100 FPS
+- **TensorRT INT8**: 120+ FPS
 
 ## Разработка
 
 ### Запуск тестов
 
 ```bash
-make test
-# Или напрямую:
+# Запуск всех тестов (если реализованы)
 poetry run pytest tests/
+
+# Только быстрые тесты
+poetry run pytest tests/ -m "not slow"
+
+# С покрытием кода
+poetry run pytest tests/ --cov=flower_classifier
 ```
 
 ### Проверка качества кода
@@ -452,49 +575,117 @@ poetry run flake8 flower_classifier/
 ### Добавление новых зависимостей
 
 ```bash
+# Основные зависимости
 poetry add package_name
-poetry add --group dev package_name  # для dev зависимостей
+
+# Dev зависимости (тестирование, линтеры)
+poetry add --group dev package_name
+
+# GPU зависимости
+poetry add --group gpu package_name
+
+# Обновление зависимостей
+poetry update
+```
+
+### Debug режим
+
+```bash
+# Обучение с дебаг логами
+poetry run python -m flower_classifier.training.train --config-name=test_train hydra.verbose=true
+
+# Инференс с подробным выводом
+poetry run python -m flower_classifier.inference.predict \
+    --image-path test.jpg \
+    --model-path models/best_model.ckpt \
+    --verbose
 ```
 
 ## Команды Makefile
 
+### Основные команды
+
 ```bash
 # Обучение и данные
 make run-train                      # Запуск обучения
-make ddvc-dataset                   # Загрузка данных через DVC
-make mlflow-ui                      # Запуск MLflow UI
+make ddvc-dataset                   # Загрузка данных через DVC (если есть)
 
 # Inference
 make run-inference                  # Batch inference (PyTorch)
-make run-tensorrt-inference         # TensorRT inference
+make run-tensorrt-inference         # TensorRT inference (высокая производительность)
+
+# Конвертация моделей
+make convert-to-onnx               # PyTorch → ONNX
+make convert-to-tensorrt-run       # ONNX → TensorRT
 
 # Inference Servers
 make start-api-server               # FastAPI REST API server
 make start-mlflow-server            # MLflow model server
 make mlflow-server-status           # Проверка статуса MLflow server
 
-# Конвертация моделей
-make convert-to-onnx               # Конвертация в ONNX
-make convert-to-tensorrt-run       # Конвертация ONNX → TensorRT
-
 # Разработка
-make format                        # Форматирование кода
-make test                          # Запуск тестов
+make format                        # Форматирование кода (black, isort)
+make test                          # Запуск тестов (если есть)
 make pre-commit-install            # Установка pre-commit hooks
 ```
 
 ### Примеры использования команд
 
+**Полный пайплайн от обучения до TensorRT:**
+
 ```bash
-# Полный пайплайн от обучения до TensorRT
+# 1. Обучение модели
 make run-train
+
+# 2. Конвертация в ONNX
 make convert-to-onnx model=models/best_model.ckpt output=models/model.onnx
+
+# 3. Оптимизация с TensorRT
 make convert-to-tensorrt-run input=models/model.onnx output=models/model.trt batch=4 precision=fp16
 
-# Запуск inference servers
-make start-api-server model=models/best_model.ckpt host=0.0.0.0 port=8000 device=auto workers=1
-make start-mlflow-server model="models:/flower_classifier/1" host=127.0.0.1 port=5001
-
-# Сравнение производительности
+# 4. Тестирование производительности
 make run-tensorrt-inference engine=models/model.trt image=test.jpg benchmark=true iterations=1000
 ```
+
+**Запуск inference servers:**
+
+```bash
+# FastAPI сервер на всех интерфейсах
+make start-api-server model=models/best_model.ckpt host=0.0.0.0 port=8000 device=auto workers=1
+
+# MLflow сервер с моделью из registry
+make start-mlflow-server model="models:/flower_classifier/1" host=127.0.0.1 port=5001
+
+# Проверка работы API
+curl -X POST "http://localhost:8000/predict" -F "file=@test_flower.jpg"
+```
+
+**Разработка и отладка:**
+
+```bash
+# Форматирование перед коммитом
+make format
+
+# Установка pre-commit (один раз)
+make pre-commit-install
+
+# Тестирование изменений
+make run-inference model=models/best_model.ckpt input=test_images output=test_results.json
+```
+
+### Переменные Makefile
+
+Для кастомизации можно переопределить переменные:
+
+```bash
+# Использование другого устройства
+make run-train COMPUTE_DEVICE='cpu'
+
+# Использование другого менеджера пакетов (гипотетически)
+make run-train POETRY_RUN='uv run'
+```
+
+Эти переменные были переименованы для оригинальности согласно требованиям:
+
+- `POETRY_RUN` (заменяет стандартное MANAGER)
+- `COMPUTE_DEVICE` (заменяет стандартное DEVICE)
