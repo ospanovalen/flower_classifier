@@ -38,6 +38,31 @@ run-tensorrt-inference:
 		$(if $(benchmark),--benchmark,) \
 		$(if $(iterations),--iterations $(iterations),)
 
+start-mlflow-server:
+	${MANAGER} python -m flower_classifier.serving.mlflow_server start \
+		--model-uri $(model) \
+		--host $(host) \
+		--port $(port) \
+		--workers $(workers)
+
+mlflow-server-predict:
+	${MANAGER} python -m flower_classifier.serving.mlflow_server predict \
+		--server-url $(server) \
+		--image-path $(image) \
+		$(if $(output),--output-file $(output),)
+
+mlflow-server-status:
+	${MANAGER} python -m flower_classifier.serving.mlflow_server status \
+		--server-url $(server)
+
+start-api-server:
+	${MANAGER} python -m flower_classifier.serving.run_server \
+		--model-path $(model) \
+		--host $(host) \
+		--port $(port) \
+		--device $(device) \
+		--workers $(workers)
+
 ddvc-dataset:
 	dvc pull
 
@@ -50,4 +75,4 @@ test:
 mlflow-ui:
 	${MANAGER} mlflow ui --host 127.0.0.1 --port 8080
 
-.PHONY: format run-train run-inference-pipeline run-inference convert-to-onnx convert-to-tensorrt convert-to-tensorrt-run run-tensorrt-inference ddvc-dataset pre-commit-install test mlflow-ui
+.PHONY: format run-train run-inference-pipeline run-inference convert-to-onnx convert-to-tensorrt convert-to-tensorrt-run run-tensorrt-inference start-mlflow-server mlflow-server-predict mlflow-server-status start-api-server ddvc-dataset pre-commit-install test mlflow-ui

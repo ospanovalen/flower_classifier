@@ -215,6 +215,65 @@ poetry run python -m flower_classifier.production.tensorrt_inference \
 - **Throughput**: 200+ изображений/сек на современной GPU
 - **Latency**: ~2-5ms на изображение
 
+## Inference Server
+
+### FastAPI REST API
+
+```bash
+# Запуск API сервера
+make start-api-server model=models/best_model.ckpt host=0.0.0.0 port=8000 device=auto workers=1
+
+# Или напрямую
+poetry run python -m flower_classifier.serving.run_server \
+    --model-path models/best_model.ckpt \
+    --host 0.0.0.0 \
+    --port 8000 \
+    --device auto \
+    --workers 1
+```
+
+**API Endpoints:**
+
+- `GET /` - Информация об API
+- `GET /health` - Health check
+- `POST /predict` - Предсказание для одного изображения (multipart/form-data)
+- `POST /predict/batch` - Batch предсказания (до 10 изображений)
+
+**Пример использования:**
+
+```bash
+# Health check
+curl http://localhost:8000/health
+
+# Предсказание для изображения
+curl -X POST "http://localhost:8000/predict" \
+     -H "accept: application/json" \
+     -H "Content-Type: multipart/form-data" \
+     -F "file=@test_flower.jpg"
+
+# Swagger UI доступен по адресу: http://localhost:8000/docs
+```
+
+### MLflow Model Serving
+
+```bash
+# Запуск MLflow model server
+make start-mlflow-server model="models:/flower_classifier/1" host=127.0.0.1 port=5001 workers=1
+
+# Проверка статуса
+make mlflow-server-status server=http://127.0.0.1:5001
+
+# Предсказание через MLflow server
+make mlflow-server-predict server=http://127.0.0.1:5001 image=test.jpg output=result.json
+```
+
+**Особенности servers:**
+
+- **FastAPI**: Простой REST API с Swagger документацией, upload файлов
+- **MLflow**: Интеграция с MLflow registry, versioning моделей
+- **Производительность**: ~100-500 запросов/сек в зависимости от hardware
+- **Автоматическое определение устройства**: CPU/GPU
+
 ### Комплектация поставки
 
 Для развертывания модели необходимы:
@@ -307,6 +366,10 @@ flower_classifier/
 │   ├── production/        # Production модули
 │   │   ├── convert_to_onnx.py # ONNX экспорт
 │   │   └── tensorrt_inference.py # TensorRT инференс
+│   ├── serving/           # Inference servers
+│   │   ├── fastapi_server.py # FastAPI REST API
+│   │   ├── mlflow_server.py # MLflow model serving
+│   │   └── run_server.py  # CLI для запуска серверов
 │   └── utils.py           # Вспомогательные функции
 ├── models/                # Сохраненные модели
 ├── plots/                 # Графики и визуализации
@@ -405,6 +468,11 @@ make mlflow-ui                      # Запуск MLflow UI
 make run-inference                  # Batch inference (PyTorch)
 make run-tensorrt-inference         # TensorRT inference
 
+# Inference Servers
+make start-api-server               # FastAPI REST API server
+make start-mlflow-server            # MLflow model server
+make mlflow-server-status           # Проверка статуса MLflow server
+
 # Конвертация моделей
 make convert-to-onnx               # Конвертация в ONNX
 make convert-to-tensorrt-run       # Конвертация ONNX → TensorRT
@@ -422,6 +490,10 @@ make pre-commit-install            # Установка pre-commit hooks
 make run-train
 make convert-to-onnx model=models/best_model.ckpt output=models/model.onnx
 make convert-to-tensorrt-run input=models/model.onnx output=models/model.trt batch=4 precision=fp16
+
+# Запуск inference servers
+make start-api-server model=models/best_model.ckpt host=0.0.0.0 port=8000 device=auto workers=1
+make start-mlflow-server model="models:/flower_classifier/1" host=127.0.0.1 port=5001
 
 # Сравнение производительности
 make run-tensorrt-inference engine=models/model.trt image=test.jpg benchmark=true iterations=1000

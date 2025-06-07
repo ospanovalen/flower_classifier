@@ -21,6 +21,10 @@ mlflow = "^2.22.1"
 timm = "^1.0.15"
 pillow = "^11.2.1"
 click = "^8.2.1"
+requests = "^2.31.0"
+fastapi = "^0.104.0"
+uvicorn = "^0.24.0"
+python-multipart = "^0.0.6"
 
 [tool.poetry.group.dev.dependencies]
 pandas = "^2.2.0"
