@@ -17,6 +17,9 @@ pre-commit = ">=4.2.0,<5.0.0"
 dvc-s3 = "^3.1.0"
 numpy = "<2.0"
 ipykernel = "^6.29.5"
+mlflow = "^2.22.1"
+timm = "^1.0.15"
+pillow = "^11.2.1"
 
 [tool.poetry.group.dev.dependencies]
 pandas = "^2.2.0"
@@ -30,11 +33,13 @@ requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 
+
 [tool.poetry.group.gpu]
 optional = true
 
 [tool.poetry.group.gpu.dependencies]
 torch = "2.7.1"
+
 
 
 [tool.poetry.group.lint]
@@ -44,6 +49,7 @@ optional = true
 black = "^24.2.0"
 isort = "^5.13.2"
 pylint = "^3.2.5"
+
 
 
 [tool.poetry.group.test]
