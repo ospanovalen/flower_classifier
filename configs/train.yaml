@@ -35,7 +35,7 @@ trainer:
   devices: auto
   max_epochs: 25
   log_every_n_steps: 10
-  precision: '16-mixed'
+  precision: "16-mixed"
 
 # Callbacks
 callbacks:

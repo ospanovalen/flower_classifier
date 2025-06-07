@@ -11,12 +11,14 @@
 ### Данные
 
 Используется датасет [Flowers Recognition](https://www.kaggle.com/datasets/alxmamaev/flowers-recognition) из Kaggle, содержащий:
+
 - **Общее количество**: ~3670 изображений
 - **Классы**: 5 типов цветов
 - **Разрешение**: переменное, приводится к 224x224 для обучения
 - **Формат**: JPG изображения
 
 Распределение по классам:
+
 - daisy: 633 изображения
 - dandelion: 898 изображений
 - roses: 641 изображение
@@ -26,16 +28,19 @@
 ### Архитектура решения
 
 **Модель**:
+
 - Backbone: RexNet-150 (предобученная на ImageNet)
 - Framework: PyTorch Lightning для структурированного обучения
 - Подход: Triplet learning с contrastive loss
 
 **Функция потерь**:
+
 - Classification Loss: CrossEntropyLoss для основной классификации
 - Contrastive Loss: CosineEmbeddingLoss для метрического обучения
 - Общий loss: сумма classification и contrastive losses
 
 **Метрики**:
+
 - F1-score (micro average)
 - Accuracy
 - Отдельное логирование contrastive и classification losses
@@ -146,6 +151,7 @@ poetry run python -m flower_classifier.production.convert_to_onnx \
 ### Комплектация поставки
 
 Для развертывания модели необходимы:
+
 - `flower_classifier.onnx` или `flower_classifier.trt` - файл модели
 - `configs/` - конфигурационные файлы
 - `flower_classifier/` - Python пакет с кодом
@@ -156,6 +162,7 @@ poetry run python -m flower_classifier.production.convert_to_onnx \
 ### Формат входных данных
 
 Модель принимает изображения в формате:
+
 - **Формат**: JPG, PNG, JPEG
 - **Размер**: любой (автоматически приводится к 224x224)
 - **Каналы**: RGB
@@ -191,7 +198,7 @@ poetry run python -m flower_classifier.inference.batch_predict \
     "tulips": 0.03,
     "daisy": 0.01,
     "sunflowers": 0.01,
-    "dandelion": 0.00
+    "dandelion": 0.0
   }
 }
 ```
@@ -243,6 +250,7 @@ flower_classifier/
 ### Производительность
 
 На тестовом наборе достигаются следующие метрики:
+
 - **Accuracy**: ~99.5%
 - **F1-score**: ~99.5%
 - **Время инференса**: ~50ms на изображение (GPU)

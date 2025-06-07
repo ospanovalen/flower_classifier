@@ -1,4 +1,4 @@
-import os
+import subprocess
 from pathlib import Path
 from typing import Dict, Tuple
 
@@ -13,6 +13,37 @@ from omegaconf import DictConfig
 from flower_classifier.data.dataset import get_data_loaders, get_default_transforms
 from flower_classifier.models.flower_model import FlowerClassifier
 from flower_classifier.utils import init_basic_logger
+
+
+def setup_data(cfg: DictConfig) -> None:
+    """Setup data by pulling from DVC if needed."""
+    logger = init_basic_logger(__name__)
+    data_path = Path(cfg.paths.data_dir)
+
+    # Check if data directory exists and has content
+    if not data_path.exists() or not any(data_path.iterdir()):
+        logger.info("Data directory empty or missing, pulling from DVC...")
+        try:
+            # Use DVC Python API to pull data
+            import dvc.api
+
+            dvc.api.dvc_pull()
+            logger.info("✅ Data successfully pulled from DVC")
+        except ImportError:
+            # Fallback to CLI if DVC API not available
+            logger.info("DVC API not available, using CLI...")
+            result = subprocess.run(
+                ["dvc", "pull"], capture_output=True, text=True, cwd=Path.cwd()
+            )
+            if result.returncode == 0:
+                logger.info("✅ Data successfully pulled from DVC")
+            else:
+                logger.warning(f"DVC pull failed: {result.stderr}")
+        except Exception as e:
+            logger.warning(f"Could not pull data from DVC: {e}")
+            logger.info("Continuing with existing data...")
+    else:
+        logger.info("Data directory exists, skipping DVC pull")
 
 
 def setup_directories(cfg: DictConfig) -> None:
@@ -121,6 +152,9 @@ def train_model(cfg: DictConfig) -> None:
     """Main training function."""
     logger = init_basic_logger(__name__)
     logger.info("Starting flower classification training...")
+
+    # Setup data (DVC pull if needed)
+    setup_data(cfg)
 
     # Setup directories
     setup_directories(cfg)
